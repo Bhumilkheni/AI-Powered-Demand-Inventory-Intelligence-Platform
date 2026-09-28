@@ -1,11 +1,12 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import pickle
 import io
+import pickle
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from pathlib import Path
+import streamlit as st
 
 # ============================================================
 # PROJECT FORESIGHT - AI DEMAND & INVENTORY DASHBOARD
@@ -20,6 +21,7 @@ st.set_page_config(
 
 BASE_DIR = Path(__file__).resolve().parent
 
+
 # ------------------------------------------------------------
 # Load external CSS
 # ------------------------------------------------------------
@@ -28,10 +30,11 @@ def load_css():
     if css_path.exists():
         st.markdown(
             f"<style>{css_path.read_text(encoding='utf-8')}</style>",
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
     else:
         st.warning("style.css not found. Keep style.css in the same folder as app.py.")
+
 
 load_css()
 
@@ -39,23 +42,38 @@ load_css()
 # User Data Upload
 # ------------------------------------------------------------
 st.sidebar.markdown("## 📂 Data Input")
-st.sidebar.caption("Optional: upload your own project CSV files. If all four are uploaded, they will be used by the dashboard.")
+st.sidebar.caption(
+    "Optional: upload your own project CSV files. If all four are uploaded, they will be used by the dashboard."
+)
 
 with st.sidebar.expander("Upload Project Data", expanded=False):
-    uploaded_sales = st.file_uploader("Sales Daily CSV", type=["csv"], key="upload_sales")
-    uploaded_inventory = st.file_uploader("Inventory Snapshots CSV", type=["csv"], key="upload_inventory")
-    uploaded_calendar = st.file_uploader("Calendar CSV", type=["csv"], key="upload_calendar")
+    uploaded_sales = st.file_uploader(
+        "Sales Daily CSV", type=["csv"], key="upload_sales"
+    )
+    uploaded_inventory = st.file_uploader(
+        "Inventory Snapshots CSV", type=["csv"], key="upload_inventory"
+    )
+    uploaded_calendar = st.file_uploader(
+        "Calendar CSV", type=["csv"], key="upload_calendar"
+    )
     uploaded_sku = st.file_uploader("SKU Master CSV", type=["csv"], key="upload_sku")
 
-    upload_count = sum(x is not None for x in [uploaded_sales, uploaded_inventory, uploaded_calendar, uploaded_sku])
+    upload_count = sum(
+        x is not None
+        for x in [uploaded_sales, uploaded_inventory, uploaded_calendar, uploaded_sku]
+    )
     if 0 < upload_count < 4:
-        st.warning("Upload all 4 CSV files to use custom data. The default project data is currently active.")
+        st.warning(
+            "Upload all 4 CSV files to use custom data. The default project data is currently active."
+        )
     elif upload_count == 4:
         st.success("✅ Custom data uploaded. Dashboard is using your CSV files.")
 
 _upload_bytes = {
     "sales": uploaded_sales.getvalue() if uploaded_sales is not None else None,
-    "inventory": uploaded_inventory.getvalue() if uploaded_inventory is not None else None,
+    "inventory": (
+        uploaded_inventory.getvalue() if uploaded_inventory is not None else None
+    ),
     "calendar": uploaded_calendar.getvalue() if uploaded_calendar is not None else None,
     "sku": uploaded_sku.getvalue() if uploaded_sku is not None else None,
 }
@@ -67,17 +85,21 @@ _use_custom_data = all(v is not None for v in _upload_bytes.values())
 # Helper functions
 # ------------------------------------------------------------
 @st.cache_data
-def load_data(sales_bytes=None, inventory_bytes=None, calendar_bytes=None, sku_bytes=None):
-    if all(v is not None for v in [sales_bytes, inventory_bytes, calendar_bytes, sku_bytes]):
+def load_data(
+    sales_bytes=None, inventory_bytes=None, calendar_bytes=None, sku_bytes=None
+):
+    if all(
+        v is not None for v in [sales_bytes, inventory_bytes, calendar_bytes, sku_bytes]
+    ):
         sales = pd.read_csv(io.BytesIO(sales_bytes))
         inventory = pd.read_csv(io.BytesIO(inventory_bytes))
         calendar = pd.read_csv(io.BytesIO(calendar_bytes))
         sku_master = pd.read_csv(io.BytesIO(sku_bytes))
     else:
-        sales = pd.read_csv("C:\\Data Science\\Machine Learning\\Project\\AI-Powered Demand & Inventory Intelligence Platform\\Dataset\\sales_daily.csv")
-        inventory = pd.read_csv("C:\\Data Science\\Machine Learning\\Project\\AI-Powered Demand & Inventory Intelligence Platform\\Dataset\\inventory_snapshots.csv")
-        calendar = pd.read_csv("C:\\Data Science\\Machine Learning\\Project\\AI-Powered Demand & Inventory Intelligence Platform\\Dataset\\calendar.csv")
-        sku_master = pd.read_csv("C:\\Data Science\\Machine Learning\\Project\\AI-Powered Demand & Inventory Intelligence Platform\\Dataset\\sku_master.csv")
+        sales = pd.read_csv("Dataset/sales_daily.csv")
+        inventory = pd.read_csv("Dataset/inventory_snapshots.csv")
+        calendar = pd.read_csv("Dataset/calendar.csv")
+        sku_master = pd.read_csv("Dataset/sku_master.csv")
 
     sales["Date"] = pd.to_datetime(sales["Date"], errors="coerce")
     inventory["Snapshot_Date"] = pd.to_datetime(
@@ -95,8 +117,12 @@ def load_data(sales_bytes=None, inventory_bytes=None, calendar_bytes=None, sku_b
 
 
 @st.cache_data
-def build_dataset(sales_bytes=None, inventory_bytes=None, calendar_bytes=None, sku_bytes=None):
-    sales, inventory, calendar, sku_master = load_data(sales_bytes, inventory_bytes, calendar_bytes, sku_bytes)
+def build_dataset(
+    sales_bytes=None, inventory_bytes=None, calendar_bytes=None, sku_bytes=None
+):
+    sales, inventory, calendar, sku_master = load_data(
+        sales_bytes, inventory_bytes, calendar_bytes, sku_bytes
+    )
 
     # Sales + product master + calendar
     df = sales.merge(sku_master, on="SKU", how="left")
@@ -178,9 +204,9 @@ def load_models():
     models = {}
 
     model_files = {
-        "demand": "C:\\Data Science\\Machine Learning\\Project\\AI-Powered Demand & Inventory Intelligence Platform\\Models\\demand_forecast_model.pkl",
-        "risk": "C:\\Data Science\\Machine Learning\\Project\\AI-Powered Demand & Inventory Intelligence Platform\\Models\\risk_model.pkl",
-        "reorder": "C:\\Data Science\\Machine Learning\\Project\\AI-Powered Demand & Inventory Intelligence Platform\\Models\\recorder_quantity_model.pkl",
+        "demand": "Models/demand_forecast_model.pkl",
+        "risk": "Models/risk_model.pkl",
+        "reorder": "Models/recorder_quantity_model.pkl",
     }
 
     for key, filename in model_files.items():
@@ -250,10 +276,30 @@ def prepare_model_input(row):
 
 
 def build_manual_input(
-    sku, category, subcategory, input_date, launch_date, price, promotion,
-    cost_price, selling_price, current_stock, on_order, lead_time_days,
-    safety_stock, reorder_point, holiday, promotion_event, lag_1, lag_7,
-    lag_14, lag_28, rolling_7, rolling_14, rolling_28, rolling_7_std
+    sku,
+    category,
+    subcategory,
+    input_date,
+    launch_date,
+    price,
+    promotion,
+    cost_price,
+    selling_price,
+    current_stock,
+    on_order,
+    lead_time_days,
+    safety_stock,
+    reorder_point,
+    holiday,
+    promotion_event,
+    lag_1,
+    lag_7,
+    lag_14,
+    lag_28,
+    rolling_7,
+    rolling_14,
+    rolling_28,
+    rolling_7_std,
 ):
     """Build one prediction row from user-entered business data."""
     row = {}
@@ -271,54 +317,64 @@ def build_manual_input(
     product_age_days = max((input_date - launch_date).days, 0)
 
     season_map = {
-        12: "Winter", 1: "Winter", 2: "Winter",
-        3: "Spring", 4: "Spring", 5: "Spring",
-        6: "Summer", 7: "Summer", 8: "Summer",
-        9: "Autumn", 10: "Autumn", 11: "Autumn",
+        12: "Winter",
+        1: "Winter",
+        2: "Winter",
+        3: "Spring",
+        4: "Spring",
+        5: "Spring",
+        6: "Summer",
+        7: "Summer",
+        8: "Summer",
+        9: "Autumn",
+        10: "Autumn",
+        11: "Autumn",
     }
 
     gross_margin = float(selling_price) - float(cost_price)
     inventory_value = float(current_stock) * float(cost_price)
 
-    row.update({
-        "SKU": str(sku),
-        "Category": str(category),
-        "Subcategory": str(subcategory),
-        "quarter": quarter,
-        "day_of_week": day_of_week,
-        "season": season_map[month],
-        "holiday": str(holiday),
-        "promotion_event": str(promotion_event),
-        "Price": float(price),
-        "Promotion": float(promotion),
-        "year": year,
-        "month": month,
-        "week": week,
-        "is_weekend": is_weekend,
-        "is_holiday": int(str(holiday).lower() in ["1", "true", "yes"]),
-        "day": day,
-        "day_of_year": day_of_year,
-        "month_num": month,
-        "year_num": year,
-        "product_age_days": product_age_days,
-        "Cost_Price": float(cost_price),
-        "Selling_Price": float(selling_price),
-        "Gross_Margin_Per_Unit": gross_margin,
-        "Current_Stock": float(current_stock),
-        "On_Order": float(on_order),
-        "Lead_Time_Days": float(lead_time_days),
-        "Safety_Stock": float(safety_stock),
-        "Reorder_Point": float(reorder_point),
-        "Inventory_Value": inventory_value,
-        "lag_1": float(lag_1),
-        "lag_7": float(lag_7),
-        "lag_14": float(lag_14),
-        "lag_28": float(lag_28),
-        "rolling_7": float(rolling_7),
-        "rolling_14": float(rolling_14),
-        "rolling_28": float(rolling_28),
-        "rolling_7_std": float(rolling_7_std),
-    })
+    row.update(
+        {
+            "SKU": str(sku),
+            "Category": str(category),
+            "Subcategory": str(subcategory),
+            "quarter": quarter,
+            "day_of_week": day_of_week,
+            "season": season_map[month],
+            "holiday": str(holiday),
+            "promotion_event": str(promotion_event),
+            "Price": float(price),
+            "Promotion": float(promotion),
+            "year": year,
+            "month": month,
+            "week": week,
+            "is_weekend": is_weekend,
+            "is_holiday": int(str(holiday).lower() in ["1", "true", "yes"]),
+            "day": day,
+            "day_of_year": day_of_year,
+            "month_num": month,
+            "year_num": year,
+            "product_age_days": product_age_days,
+            "Cost_Price": float(cost_price),
+            "Selling_Price": float(selling_price),
+            "Gross_Margin_Per_Unit": gross_margin,
+            "Current_Stock": float(current_stock),
+            "On_Order": float(on_order),
+            "Lead_Time_Days": float(lead_time_days),
+            "Safety_Stock": float(safety_stock),
+            "Reorder_Point": float(reorder_point),
+            "Inventory_Value": inventory_value,
+            "lag_1": float(lag_1),
+            "lag_7": float(lag_7),
+            "lag_14": float(lag_14),
+            "lag_28": float(lag_28),
+            "rolling_7": float(rolling_7),
+            "rolling_14": float(rolling_14),
+            "rolling_28": float(rolling_28),
+            "rolling_7_std": float(rolling_7_std),
+        }
+    )
 
     return pd.Series(row)
 
@@ -365,10 +421,16 @@ def get_prediction_table(df, models):
 # ------------------------------------------------------------
 try:
     sales, inventory, calendar, sku_master = load_data(
-        _upload_bytes["sales"], _upload_bytes["inventory"], _upload_bytes["calendar"], _upload_bytes["sku"]
+        _upload_bytes["sales"],
+        _upload_bytes["inventory"],
+        _upload_bytes["calendar"],
+        _upload_bytes["sku"],
     )
     df = build_dataset(
-        _upload_bytes["sales"], _upload_bytes["inventory"], _upload_bytes["calendar"], _upload_bytes["sku"]
+        _upload_bytes["sales"],
+        _upload_bytes["inventory"],
+        _upload_bytes["calendar"],
+        _upload_bytes["sku"],
     )
     models = load_models()
 except Exception as e:
@@ -381,403 +443,417 @@ prediction_df = get_prediction_table(df, models)
 # ------------------------------------------------------------
 # Top Navigation Tabs
 # ------------------------------------------------------------
-st.markdown("""
+st.markdown(
+    """
 <div class="foresight-header">
     <div class="foresight-brand">📊 Project Foresight</div>
     <div class="foresight-subtitle">AI-powered Demand Forecasting · Inventory Intelligence · Stockout Risk Analytics</div>
     <div class="status-pill"><span class="status-dot"></span> XGBoost Intelligence System · Dashboard Online</div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-tabs = st.tabs(['🏠 Home', '📈 Sales Analytics', '🔮 Demand Forecast', '📦 Inventory Dashboard', '⚠️ Risk Dashboard', '🛍️ Product Details', '🤖 AI Prediction', '👔 Executive Summary'])
+tabs = st.tabs(
+    [
+        "🏠 Home",
+        "📈 Sales Analytics",
+        "🔮 Demand Forecast",
+        "📦 Inventory Dashboard",
+        "⚠️ Risk Dashboard",
+        "🛍️ Product Details",
+        "🤖 AI Prediction",
+        "👔 Executive Summary",
+    ]
+)
 
 with tabs[0]:
     # ============================================================
     # HOME PAGE
     # ============================================================
 
-        st.markdown(
-            '<div class="main-title">Project Foresight</div>', unsafe_allow_html=True
-        )
-        st.markdown(
-            '<div class="sub-title">AI-powered demand forecasting, inventory '
-            "planning and stockout risk intelligence</div>",
-            unsafe_allow_html=True,
-        )
+    st.markdown(
+        '<div class="main-title">Project Foresight</div>', unsafe_allow_html=True
+    )
+    st.markdown(
+        '<div class="sub-title">AI-powered demand forecasting, inventory '
+        "planning and stockout risk intelligence</div>",
+        unsafe_allow_html=True,
+    )
 
-        c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
 
-        with c1:
-            st.metric("Total SKUs", f"{df['SKU'].nunique():,}")
+    with c1:
+        st.metric("Total SKUs", f"{df['SKU'].nunique():,}")
 
-        with c2:
-            st.metric("Sales Records", f"{len(sales):,}")
+    with c2:
+        st.metric("Sales Records", f"{len(sales):,}")
 
-        with c3:
-            st.metric("Total Units Sold", f"{sales['Units_Sold'].sum():,.0f}")
+    with c3:
+        st.metric("Total Units Sold", f"{sales['Units_Sold'].sum():,.0f}")
 
-        with c4:
-            st.metric("Total Revenue", f"₹{sales['Revenue'].sum():,.0f}")
+    with c4:
+        st.metric("Total Revenue", f"₹{sales['Revenue'].sum():,.0f}")
 
-        st.markdown("### Dashboard Modules")
+    st.markdown("### Dashboard Modules")
 
-        modules = [
-            ("📈", "Sales Analytics", "Analyze sales, revenue, prices and promotions."),
-            ("🔮", "Demand Forecast", "Predict 7-day future product demand."),
-            (
-                "📦",
-                "Inventory Dashboard",
-                "Monitor current stock, inventory value and reorder needs.",
-            ),
-            ("⚠️", "Risk Dashboard", "Identify products with stockout risk."),
-            ("🛍️", "Product Details", "View product-level information and history."),
-            (
-                "👔",
-                "Executive Summary Dashboard",
-                "Management-level KPIs and business overview.",
-            ),
-        ]
+    modules = [
+        ("📈", "Sales Analytics", "Analyze sales, revenue, prices and promotions."),
+        ("🔮", "Demand Forecast", "Predict 7-day future product demand."),
+        (
+            "📦",
+            "Inventory Dashboard",
+            "Monitor current stock, inventory value and reorder needs.",
+        ),
+        ("⚠️", "Risk Dashboard", "Identify products with stockout risk."),
+        ("🛍️", "Product Details", "View product-level information and history."),
+        (
+            "👔",
+            "Executive Summary Dashboard",
+            "Management-level KPIs and business overview.",
+        ),
+    ]
 
-        cols = st.columns(3)
-        for i, (icon, title, description) in enumerate(modules):
-            with cols[i % 3]:
-                st.markdown(f"#### {icon} {title}")
-                st.write(description)
+    cols = st.columns(3)
+    for i, (icon, title, description) in enumerate(modules):
+        with cols[i % 3]:
+            st.markdown(f"#### {icon} {title}")
+            st.write(description)
 
-        st.markdown("### Dataset Period")
-        st.write(
-            f"Sales data: **{sales['Date'].min().date()}** "
-            f"to **{sales['Date'].max().date()}**"
-        )
+    st.markdown("### Dataset Period")
+    st.write(
+        f"Sales data: **{sales['Date'].min().date()}** "
+        f"to **{sales['Date'].max().date()}**"
+    )
 
 
 with tabs[1]:
     # ============================================================
     # SALES ANALYTICS
     # ============================================================
-        st.title("Sales Analytics")
+    st.title("Sales Analytics")
 
-        col1, col2 = st.columns(2)
-        with col1:
-            start_date = st.date_input(
-                "Start Date",
-                value=sales["Date"].min().date(),
-                min_value=sales["Date"].min().date(),
-                max_value=sales["Date"].max().date(),
-            )
-        with col2:
-            end_date = st.date_input(
-                "End Date",
-                value=sales["Date"].max().date(),
-                min_value=sales["Date"].min().date(),
-                max_value=sales["Date"].max().date(),
-            )
-
-        filtered = sales[
-            (sales["Date"].dt.date >= start_date) & (sales["Date"].dt.date <= end_date)
-        ].copy()
-
-        a, b, c, d = st.columns(4)
-        a.metric("Units Sold", f"{filtered['Units_Sold'].sum():,.0f}")
-        b.metric("Revenue", f"₹{filtered['Revenue'].sum():,.0f}")
-        c.metric("Avg. Price", f"₹{filtered['Price'].mean():,.2f}")
-        d.metric("Promoted Records", f"{int(filtered['Promotion'].sum()):,}")
-
-        daily = filtered.groupby("Date", as_index=False).agg(
-            Units_Sold=("Units_Sold", "sum"), Revenue=("Revenue", "sum")
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input(
+            "Start Date",
+            value=sales["Date"].min().date(),
+            min_value=sales["Date"].min().date(),
+            max_value=sales["Date"].max().date(),
+        )
+    with col2:
+        end_date = st.date_input(
+            "End Date",
+            value=sales["Date"].max().date(),
+            min_value=sales["Date"].min().date(),
+            max_value=sales["Date"].max().date(),
         )
 
-        fig = px.line(daily, x="Date", y="Revenue", title="Daily Revenue")
+    filtered = sales[
+        (sales["Date"].dt.date >= start_date) & (sales["Date"].dt.date <= end_date)
+    ].copy()
+
+    a, b, c, d = st.columns(4)
+    a.metric("Units Sold", f"{filtered['Units_Sold'].sum():,.0f}")
+    b.metric("Revenue", f"₹{filtered['Revenue'].sum():,.0f}")
+    c.metric("Avg. Price", f"₹{filtered['Price'].mean():,.2f}")
+    d.metric("Promoted Records", f"{int(filtered['Promotion'].sum()):,}")
+
+    daily = filtered.groupby("Date", as_index=False).agg(
+        Units_Sold=("Units_Sold", "sum"), Revenue=("Revenue", "sum")
+    )
+
+    fig = px.line(daily, x="Date", y="Revenue", title="Daily Revenue")
+    st.plotly_chart(fig, use_container_width=True)
+
+    left, right = st.columns(2)
+
+    with left:
+        sku_sales = (
+            filtered.groupby("SKU", as_index=False)["Units_Sold"]
+            .sum()
+            .sort_values("Units_Sold", ascending=False)
+            .head(15)
+        )
+        fig = px.bar(
+            sku_sales,
+            x="Units_Sold",
+            y="SKU",
+            orientation="h",
+            title="Top 15 SKUs by Units Sold",
+        )
         st.plotly_chart(fig, use_container_width=True)
 
-        left, right = st.columns(2)
-
-        with left:
-            sku_sales = (
-                filtered.groupby("SKU", as_index=False)["Units_Sold"]
-                .sum()
-                .sort_values("Units_Sold", ascending=False)
-                .head(15)
-            )
-            fig = px.bar(
-                sku_sales,
-                x="Units_Sold",
-                y="SKU",
-                orientation="h",
-                title="Top 15 SKUs by Units Sold",
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        with right:
-            monthly = (
-                filtered.assign(Month=filtered["Date"].dt.to_period("M").astype(str))
-                .groupby("Month", as_index=False)["Revenue"]
-                .sum()
-            )
-            fig = px.bar(monthly, x="Month", y="Revenue", title="Monthly Revenue")
-            st.plotly_chart(fig, use_container_width=True)
+    with right:
+        monthly = (
+            filtered.assign(Month=filtered["Date"].dt.to_period("M").astype(str))
+            .groupby("Month", as_index=False)["Revenue"]
+            .sum()
+        )
+        fig = px.bar(monthly, x="Month", y="Revenue", title="Monthly Revenue")
+        st.plotly_chart(fig, use_container_width=True)
 
 
 with tabs[2]:
     # ============================================================
     # DEMAND FORECAST
     # ============================================================
-        st.title("Demand Forecast")
+    st.title("Demand Forecast")
 
-        if "demand" not in models:
-            st.warning(
-                "demand_forecast_model.pkl was not found. "
-                "Place it in the same folder as app.py."
-            )
-            st.stop()
-
-        sku = st.selectbox("Select SKU", sorted(df["SKU"].dropna().unique()))
-
-        sku_df = df[df["SKU"] == sku].sort_values("Date").copy()
-        latest = sku_df.iloc[-1]
-
-        X = prepare_model_input(latest)
-        predicted_demand = max(float(models["demand"].predict(X)[0]), 0)
-
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Selected SKU", sku)
-        c2.metric("Latest Daily Sales", f"{latest['Units_Sold']:.0f}")
-        c3.metric("7-Day Forecast", f"{predicted_demand:.1f} units")
-        c4.metric("Current Stock", f"{latest['Current_Stock']:.0f}")
-
-        history = sku_df.tail(90)[["Date", "Units_Sold"]].rename(
-            columns={"Units_Sold": "Demand"}
+    if "demand" not in models:
+        st.warning(
+            "demand_forecast_model.pkl was not found. "
+            "Place it in the same folder as app.py."
         )
+        st.stop()
 
-        fig = px.line(
-            history, x="Date", y="Demand", title=f"{sku} - Historical Daily Demand"
+    sku = st.selectbox("Select SKU", sorted(df["SKU"].dropna().unique()))
+
+    sku_df = df[df["SKU"] == sku].sort_values("Date").copy()
+    latest = sku_df.iloc[-1]
+
+    X = prepare_model_input(latest)
+    predicted_demand = max(float(models["demand"].predict(X)[0]), 0)
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Selected SKU", sku)
+    c2.metric("Latest Daily Sales", f"{latest['Units_Sold']:.0f}")
+    c3.metric("7-Day Forecast", f"{predicted_demand:.1f} units")
+    c4.metric("Current Stock", f"{latest['Current_Stock']:.0f}")
+
+    history = sku_df.tail(90)[["Date", "Units_Sold"]].rename(
+        columns={"Units_Sold": "Demand"}
+    )
+
+    fig = px.line(
+        history, x="Date", y="Demand", title=f"{sku} - Historical Daily Demand"
+    )
+
+    forecast_date = latest["Date"] + pd.Timedelta(days=1)
+    forecast_dates = pd.date_range(forecast_date, periods=7)
+
+    # Show the model's 7-day total as an informational forecast line.
+    # The saved model predicts the total 7-day demand, not seven separate days.
+    avg_forecast = predicted_demand / 7
+
+    fig.add_trace(
+        go.Scatter(
+            x=forecast_dates,
+            y=[avg_forecast] * 7,
+            mode="lines+markers",
+            name="Average Forecast / Day",
         )
+    )
 
-        forecast_date = latest["Date"] + pd.Timedelta(days=1)
-        forecast_dates = pd.date_range(forecast_date, periods=7)
+    st.plotly_chart(fig, use_container_width=True)
 
-        # Show the model's 7-day total as an informational forecast line.
-        # The saved model predicts the total 7-day demand, not seven separate days.
-        avg_forecast = predicted_demand / 7
+    st.markdown("### Forecast Inputs")
 
-        fig.add_trace(
-            go.Scatter(
-                x=forecast_dates,
-                y=[avg_forecast] * 7,
-                mode="lines+markers",
-                name="Average Forecast / Day",
-            )
-        )
+    forecast_inputs = X.T.rename(columns={0: "Value"}).copy()
+    forecast_inputs["Value"] = forecast_inputs["Value"].astype(str)
 
-        st.plotly_chart(fig, use_container_width=True)
-
-        st.markdown("### Forecast Inputs")
-
-        forecast_inputs = X.T.rename(columns={0: "Value"}).copy()
-        forecast_inputs["Value"] = forecast_inputs["Value"].astype(str)
-
-        st.dataframe(
-            forecast_inputs,
-            use_container_width=True,
-            hide_index=False,
-        )
+    st.dataframe(
+        forecast_inputs,
+        use_container_width=True,
+        hide_index=False,
+    )
 
 
 with tabs[3]:
     # ============================================================
     # INVENTORY DASHBOARD
     # ============================================================
-        st.title("Inventory Dashboard")
+    st.title("Inventory Dashboard")
 
-        inv = prediction_df.copy()
+    inv = prediction_df.copy()
 
-        if inv.empty:
-            st.warning("No inventory records available.")
-            st.stop()
+    if inv.empty:
+        st.warning("No inventory records available.")
+        st.stop()
 
-        total_stock = inv["Current_Stock"].fillna(0).sum()
-        total_on_order = inv["On_Order"].fillna(0).sum()
-        inventory_value = inv["Inventory_Value"].fillna(0).sum()
+    total_stock = inv["Current_Stock"].fillna(0).sum()
+    total_on_order = inv["On_Order"].fillna(0).sum()
+    inventory_value = inv["Inventory_Value"].fillna(0).sum()
 
-        if "Predicted_Reorder_Qty" in inv:
-            total_reorder = inv["Predicted_Reorder_Qty"].sum()
-        else:
-            total_reorder = 0
+    if "Predicted_Reorder_Qty" in inv:
+        total_reorder = inv["Predicted_Reorder_Qty"].sum()
+    else:
+        total_reorder = 0
 
-        a, b, c, d = st.columns(4)
-        a.metric("Current Stock", f"{total_stock:,.0f}")
-        b.metric("On Order", f"{total_on_order:,.0f}")
-        c.metric("Inventory Value", f"₹{inventory_value:,.0f}")
-        d.metric("Predicted Reorder Qty", f"{total_reorder:,.0f}")
+    a, b, c, d = st.columns(4)
+    a.metric("Current Stock", f"{total_stock:,.0f}")
+    b.metric("On Order", f"{total_on_order:,.0f}")
+    c.metric("Inventory Value", f"₹{inventory_value:,.0f}")
+    d.metric("Predicted Reorder Qty", f"{total_reorder:,.0f}")
 
-        st.markdown("### Inventory by SKU")
+    st.markdown("### Inventory by SKU")
 
-        display_cols = [
-            "SKU",
-            "Product_Name",
-            "Category",
-            "Current_Stock",
-            "On_Order",
-            "Safety_Stock",
-            "Reorder_Point",
-            "Inventory_Value",
-        ]
+    display_cols = [
+        "SKU",
+        "Product_Name",
+        "Category",
+        "Current_Stock",
+        "On_Order",
+        "Safety_Stock",
+        "Reorder_Point",
+        "Inventory_Value",
+    ]
 
-        if "Predicted_Reorder_Qty" in inv:
-            display_cols.append("Predicted_Reorder_Qty")
+    if "Predicted_Reorder_Qty" in inv:
+        display_cols.append("Predicted_Reorder_Qty")
 
-        available_cols = [c for c in display_cols if c in inv.columns]
+    available_cols = [c for c in display_cols if c in inv.columns]
 
-        st.dataframe(
-            inv[available_cols].sort_values("Current_Stock", ascending=True),
-            use_container_width=True,
-            hide_index=True,
-        )
+    st.dataframe(
+        inv[available_cols].sort_values("Current_Stock", ascending=True),
+        use_container_width=True,
+        hide_index=True,
+    )
 
-        chart = inv.nlargest(15, "Inventory_Value")[["SKU", "Inventory_Value"]]
+    chart = inv.nlargest(15, "Inventory_Value")[["SKU", "Inventory_Value"]]
 
-        fig = px.bar(
-            chart, x="SKU", y="Inventory_Value", title="Top 15 SKUs by Inventory Value"
-        )
-        st.plotly_chart(fig, use_container_width=True)
+    fig = px.bar(
+        chart, x="SKU", y="Inventory_Value", title="Top 15 SKUs by Inventory Value"
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 
 with tabs[4]:
     # ============================================================
     # RISK DASHBOARD
     # ============================================================
-        st.title("Risk Dashboard")
+    st.title("Risk Dashboard")
 
-        if "risk" not in models:
-            st.warning(
-                "risk_model.pkl was not found. " "Place it in the same folder as app.py."
-            )
-            st.stop()
-
-        risk_df = prediction_df.copy()
-
-        high_risk = risk_df[risk_df["Predicted_Stockout_Risk"] == 1].copy()
-
-        c1, c2, c3 = st.columns(3)
-        c1.metric("SKUs Analyzed", f"{len(risk_df):,}")
-        c2.metric("High-Risk SKUs", f"{len(high_risk):,}")
-        c3.metric("High-Risk %", f"{(len(high_risk) / max(len(risk_df), 1)) * 100:.1f}%")
-
-        risk_df["Risk Status"] = np.where(
-            risk_df["Predicted_Stockout_Risk"] == 1, "High Risk", "Low Risk"
+    if "risk" not in models:
+        st.warning(
+            "risk_model.pkl was not found. " "Place it in the same folder as app.py."
         )
+        st.stop()
 
-        display_cols = [
-            "SKU",
-            "Product_Name",
-            "Category",
-            "Current_Stock",
-            "On_Order",
-            "Predicted_7_Day_Demand",
-            "Stockout_Probability",
-            "Predicted_Reorder_Qty",
-            "Risk Status",
-        ]
-        display_cols = [c for c in display_cols if c in risk_df.columns]
+    risk_df = prediction_df.copy()
 
-        st.dataframe(
-            risk_df[display_cols].sort_values("Stockout_Probability", ascending=False),
-            use_container_width=True,
-            hide_index=True,
+    high_risk = risk_df[risk_df["Predicted_Stockout_Risk"] == 1].copy()
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("SKUs Analyzed", f"{len(risk_df):,}")
+    c2.metric("High-Risk SKUs", f"{len(high_risk):,}")
+    c3.metric("High-Risk %", f"{(len(high_risk) / max(len(risk_df), 1)) * 100:.1f}%")
+
+    risk_df["Risk Status"] = np.where(
+        risk_df["Predicted_Stockout_Risk"] == 1, "High Risk", "Low Risk"
+    )
+
+    display_cols = [
+        "SKU",
+        "Product_Name",
+        "Category",
+        "Current_Stock",
+        "On_Order",
+        "Predicted_7_Day_Demand",
+        "Stockout_Probability",
+        "Predicted_Reorder_Qty",
+        "Risk Status",
+    ]
+    display_cols = [c for c in display_cols if c in risk_df.columns]
+
+    st.dataframe(
+        risk_df[display_cols].sort_values("Stockout_Probability", ascending=False),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    if not risk_df.empty:
+        fig = px.bar(
+            risk_df.nlargest(15, "Stockout_Probability"),
+            x="Stockout_Probability",
+            y="SKU",
+            color="Risk Status",
+            orientation="h",
+            title="Highest Stockout Probabilities",
         )
-
-        if not risk_df.empty:
-            fig = px.bar(
-                risk_df.nlargest(15, "Stockout_Probability"),
-                x="Stockout_Probability",
-                y="SKU",
-                color="Risk Status",
-                orientation="h",
-                title="Highest Stockout Probabilities",
-            )
-            st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
 
 
 with tabs[5]:
     # ============================================================
     # PRODUCT DETAILS
     # ============================================================
-        st.title("Product Details")
+    st.title("Product Details")
 
-        sku = st.selectbox(
-            "Select Product / SKU", sorted(sku_master["SKU"].dropna().unique())
+    sku = st.selectbox(
+        "Select Product / SKU", sorted(sku_master["SKU"].dropna().unique())
+    )
+
+    product = sku_master[sku_master["SKU"] == sku].iloc[0]
+    history = df[df["SKU"] == sku].sort_values("Date").copy()
+
+    st.markdown("### Product Information")
+
+    a, b, c, d = st.columns(4)
+    a.metric("Product", product["Product_Name"])
+    b.metric("Category", product["Category"])
+    c.metric("Subcategory", product["Subcategory"])
+    d.metric("Selling Price", f"₹{product['Selling_Price']:,.2f}")
+
+    info = pd.DataFrame(
+        {
+            "Field": [
+                "SKU",
+                "Product Name",
+                "Category",
+                "Subcategory",
+                "Launch Date",
+                "Cost Price",
+                "Selling Price",
+                "Gross Margin / Unit",
+            ],
+            "Value": [
+                str(product["SKU"]),
+                str(product["Product_Name"]),
+                str(product["Category"]),
+                str(product["Subcategory"]),
+                str(product["Launch_Date"].date()),
+                f"₹{float(product['Cost_Price']):,.2f}",
+                f"₹{float(product['Selling_Price']):,.2f}",
+                f"₹{float(product['Gross_Margin_Per_Unit']):,.2f}",
+            ],
+        }
+    )
+
+    info["Field"] = info["Field"].astype(str)
+    info["Value"] = info["Value"].astype(str)
+
+    st.dataframe(
+        info,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    left, right = st.columns(2)
+
+    with left:
+        fig = px.line(
+            history.tail(180), x="Date", y="Units_Sold", title="Sales History"
         )
+        st.plotly_chart(fig, use_container_width=True)
 
-        product = sku_master[sku_master["SKU"] == sku].iloc[0]
-        history = df[df["SKU"] == sku].sort_values("Date").copy()
-
-        st.markdown("### Product Information")
-
-        a, b, c, d = st.columns(4)
-        a.metric("Product", product["Product_Name"])
-        b.metric("Category", product["Category"])
-        c.metric("Subcategory", product["Subcategory"])
-        d.metric("Selling Price", f"₹{product['Selling_Price']:,.2f}")
-
-        info = pd.DataFrame(
-            {
-                "Field": [
-                    "SKU",
-                    "Product Name",
-                    "Category",
-                    "Subcategory",
-                    "Launch Date",
-                    "Cost Price",
-                    "Selling Price",
-                    "Gross Margin / Unit",
-                ],
-                "Value": [
-                    str(product["SKU"]),
-                    str(product["Product_Name"]),
-                    str(product["Category"]),
-                    str(product["Subcategory"]),
-                    str(product["Launch_Date"].date()),
-                    f"₹{float(product['Cost_Price']):,.2f}",
-                    f"₹{float(product['Selling_Price']):,.2f}",
-                    f"₹{float(product['Gross_Margin_Per_Unit']):,.2f}",
-                ],
-            }
-        )
-
-        info["Field"] = info["Field"].astype(str)
-        info["Value"] = info["Value"].astype(str)
-
-        st.dataframe(
-            info,
-            use_container_width=True,
-            hide_index=True,
-        )
-
-        left, right = st.columns(2)
-
-        with left:
-            fig = px.line(
-                history.tail(180), x="Date", y="Units_Sold", title="Sales History"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        with right:
-            if not prediction_df.empty:
-                p = prediction_df[prediction_df["SKU"] == sku]
-                if not p.empty and "Predicted_7_Day_Demand" in p:
-                    row = p.iloc[0]
-                    values = {
-                        "7-Day Demand": row.get("Predicted_7_Day_Demand", 0),
-                        "Current Stock": row.get("Current_Stock", 0),
-                        "On Order": row.get("On_Order", 0),
-                        "Reorder Qty": row.get("Predicted_Reorder_Qty", 0),
-                    }
-                    fig = px.bar(
-                        x=list(values.keys()),
-                        y=list(values.values()),
-                        title="Current Product Planning Indicators",
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
+    with right:
+        if not prediction_df.empty:
+            p = prediction_df[prediction_df["SKU"] == sku]
+            if not p.empty and "Predicted_7_Day_Demand" in p:
+                row = p.iloc[0]
+                values = {
+                    "7-Day Demand": row.get("Predicted_7_Day_Demand", 0),
+                    "Current Stock": row.get("Current_Stock", 0),
+                    "On Order": row.get("On_Order", 0),
+                    "Reorder Qty": row.get("Predicted_Reorder_Qty", 0),
+                }
+                fig = px.bar(
+                    x=list(values.keys()),
+                    y=list(values.values()),
+                    title="Current Product Planning Indicators",
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
 
 with tabs[6]:
@@ -785,7 +861,9 @@ with tabs[6]:
     # AI PREDICTION - USER INPUT
     # ============================================================
     st.title("AI Prediction")
-    st.caption("Enter product and inventory information to generate predictions, or upload all four project CSV files from the sidebar to use your own dataset.")
+    st.caption(
+        "Enter product and inventory information to generate predictions, or upload all four project CSV files from the sidebar to use your own dataset."
+    )
 
     available_models = []
     if "demand" in models:
@@ -796,17 +874,27 @@ with tabs[6]:
         available_models.append("Reorder Quantity")
 
     if not available_models:
-        st.error("No XGBoost model files were found. Add the required .pkl files beside app.py.")
+        st.error(
+            "No XGBoost model files were found. Add the required .pkl files beside app.py."
+        )
     else:
-        st.success("User input is ready. Fill in the product details below and click Predict.")
+        st.success(
+            "User input is ready. Fill in the product details below and click Predict."
+        )
 
-        use_existing = st.checkbox("Use an existing SKU as a starting point", value=True)
+        use_existing = st.checkbox(
+            "Use an existing SKU as a starting point", value=True
+        )
 
         existing_sku = None
         template = None
         if use_existing and not df.empty:
-            existing_sku = st.selectbox("Select existing SKU", sorted(df["SKU"].dropna().astype(str).unique()))
-            sku_history = df[df["SKU"].astype(str) == str(existing_sku)].sort_values("Date")
+            existing_sku = st.selectbox(
+                "Select existing SKU", sorted(df["SKU"].dropna().astype(str).unique())
+            )
+            sku_history = df[df["SKU"].astype(str) == str(existing_sku)].sort_values(
+                "Date"
+            )
             if not sku_history.empty:
                 template = sku_history.iloc[-1]
 
@@ -815,64 +903,298 @@ with tabs[6]:
             c1, c2, c3 = st.columns(3)
 
             with c1:
-                sku_value = st.text_input("SKU", value=str(template.get("SKU", "CUSTOM-001")) if template is not None else "CUSTOM-001")
-                category_options = sorted(sku_master["Category"].dropna().astype(str).unique())
-                default_category = str(template.get("Category", category_options[0] if category_options else "Unknown")) if template is not None else (category_options[0] if category_options else "Unknown")
-                category = st.selectbox("Category", category_options if category_options else ["Unknown"], index=(category_options.index(default_category) if default_category in category_options else 0))
-                sub_options = sorted(sku_master["Subcategory"].dropna().astype(str).unique())
-                default_sub = str(template.get("Subcategory", sub_options[0] if sub_options else "Unknown")) if template is not None else (sub_options[0] if sub_options else "Unknown")
-                subcategory = st.selectbox("Subcategory", sub_options if sub_options else ["Unknown"], index=(sub_options.index(default_sub) if default_sub in sub_options else 0))
+                sku_value = st.text_input(
+                    "SKU",
+                    value=(
+                        str(template.get("SKU", "CUSTOM-001"))
+                        if template is not None
+                        else "CUSTOM-001"
+                    ),
+                )
+                category_options = sorted(
+                    sku_master["Category"].dropna().astype(str).unique()
+                )
+                default_category = (
+                    str(
+                        template.get(
+                            "Category",
+                            category_options[0] if category_options else "Unknown",
+                        )
+                    )
+                    if template is not None
+                    else (category_options[0] if category_options else "Unknown")
+                )
+                category = st.selectbox(
+                    "Category",
+                    category_options if category_options else ["Unknown"],
+                    index=(
+                        category_options.index(default_category)
+                        if default_category in category_options
+                        else 0
+                    ),
+                )
+                sub_options = sorted(
+                    sku_master["Subcategory"].dropna().astype(str).unique()
+                )
+                default_sub = (
+                    str(
+                        template.get(
+                            "Subcategory", sub_options[0] if sub_options else "Unknown"
+                        )
+                    )
+                    if template is not None
+                    else (sub_options[0] if sub_options else "Unknown")
+                )
+                subcategory = st.selectbox(
+                    "Subcategory",
+                    sub_options if sub_options else ["Unknown"],
+                    index=(
+                        sub_options.index(default_sub)
+                        if default_sub in sub_options
+                        else 0
+                    ),
+                )
 
             with c2:
-                input_date = st.date_input("Prediction Date", value=pd.Timestamp(template["Date"]).date() if template is not None else pd.Timestamp.today().date())
-                launch_default = pd.Timestamp(template["Launch_Date"]).date() if template is not None and pd.notna(template.get("Launch_Date")) else pd.Timestamp(input_date).date()
+                input_date = st.date_input(
+                    "Prediction Date",
+                    value=(
+                        pd.Timestamp(template["Date"]).date()
+                        if template is not None
+                        else pd.Timestamp.today().date()
+                    ),
+                )
+                launch_default = (
+                    pd.Timestamp(template["Launch_Date"]).date()
+                    if template is not None and pd.notna(template.get("Launch_Date"))
+                    else pd.Timestamp(input_date).date()
+                )
                 launch_date = st.date_input("Launch Date", value=launch_default)
-                price = st.number_input("Price", min_value=0.0, value=float(template.get("Price", 0.0)) if template is not None else 0.0, step=1.0)
-                promotion = st.number_input("Promotion", min_value=0.0, value=float(template.get("Promotion", 0.0)) if template is not None else 0.0, step=1.0)
+                price = st.number_input(
+                    "Price",
+                    min_value=0.0,
+                    value=(
+                        float(template.get("Price", 0.0))
+                        if template is not None
+                        else 0.0
+                    ),
+                    step=1.0,
+                )
+                promotion = st.number_input(
+                    "Promotion",
+                    min_value=0.0,
+                    value=(
+                        float(template.get("Promotion", 0.0))
+                        if template is not None
+                        else 0.0
+                    ),
+                    step=1.0,
+                )
 
             with c3:
-                cost_price = st.number_input("Cost Price", min_value=0.0, value=float(template.get("Cost_Price", 0.0)) if template is not None else 0.0, step=1.0)
-                selling_price = st.number_input("Selling Price", min_value=0.0, value=float(template.get("Selling_Price", template.get("Price", 0.0))) if template is not None else 0.0, step=1.0)
-                current_stock = st.number_input("Current Stock", min_value=0.0, value=float(template.get("Current_Stock", 0.0)) if template is not None else 0.0, step=1.0)
-                on_order = st.number_input("On Order", min_value=0.0, value=float(template.get("On_Order", 0.0)) if template is not None else 0.0, step=1.0)
+                cost_price = st.number_input(
+                    "Cost Price",
+                    min_value=0.0,
+                    value=(
+                        float(template.get("Cost_Price", 0.0))
+                        if template is not None
+                        else 0.0
+                    ),
+                    step=1.0,
+                )
+                selling_price = st.number_input(
+                    "Selling Price",
+                    min_value=0.0,
+                    value=(
+                        float(template.get("Selling_Price", template.get("Price", 0.0)))
+                        if template is not None
+                        else 0.0
+                    ),
+                    step=1.0,
+                )
+                current_stock = st.number_input(
+                    "Current Stock",
+                    min_value=0.0,
+                    value=(
+                        float(template.get("Current_Stock", 0.0))
+                        if template is not None
+                        else 0.0
+                    ),
+                    step=1.0,
+                )
+                on_order = st.number_input(
+                    "On Order",
+                    min_value=0.0,
+                    value=(
+                        float(template.get("On_Order", 0.0))
+                        if template is not None
+                        else 0.0
+                    ),
+                    step=1.0,
+                )
 
             st.markdown("### Inventory Planning Inputs")
             c1, c2, c3, c4 = st.columns(4)
             with c1:
-                lead_time = st.number_input("Lead Time (Days)", min_value=0.0, value=float(template.get("Lead_Time_Days", 0.0)) if template is not None else 0.0, step=1.0)
+                lead_time = st.number_input(
+                    "Lead Time (Days)",
+                    min_value=0.0,
+                    value=(
+                        float(template.get("Lead_Time_Days", 0.0))
+                        if template is not None
+                        else 0.0
+                    ),
+                    step=1.0,
+                )
             with c2:
-                safety_stock = st.number_input("Safety Stock", min_value=0.0, value=float(template.get("Safety_Stock", 0.0)) if template is not None else 0.0, step=1.0)
+                safety_stock = st.number_input(
+                    "Safety Stock",
+                    min_value=0.0,
+                    value=(
+                        float(template.get("Safety_Stock", 0.0))
+                        if template is not None
+                        else 0.0
+                    ),
+                    step=1.0,
+                )
             with c3:
-                reorder_point = st.number_input("Reorder Point", min_value=0.0, value=float(template.get("Reorder_Point", 0.0)) if template is not None else 0.0, step=1.0)
+                reorder_point = st.number_input(
+                    "Reorder Point",
+                    min_value=0.0,
+                    value=(
+                        float(template.get("Reorder_Point", 0.0))
+                        if template is not None
+                        else 0.0
+                    ),
+                    step=1.0,
+                )
             with c4:
-                holiday = st.selectbox("Holiday", ["0", "1"], index=1 if template is not None and str(template.get("holiday", "0")).lower() in ["1", "true", "yes"] else 0)
+                holiday = st.selectbox(
+                    "Holiday",
+                    ["0", "1"],
+                    index=(
+                        1
+                        if template is not None
+                        and str(template.get("holiday", "0")).lower()
+                        in ["1", "true", "yes"]
+                        else 0
+                    ),
+                )
 
-            promotion_event = st.text_input("Promotion Event", value=str(template.get("promotion_event", "None")) if template is not None else "None")
+            promotion_event = st.text_input(
+                "Promotion Event",
+                value=(
+                    str(template.get("promotion_event", "None"))
+                    if template is not None
+                    else "None"
+                ),
+            )
 
             with st.expander("Advanced Historical Demand Inputs"):
-                st.caption("These values are used by the trained model's lag and rolling-demand features. Existing SKUs are prefilled from their latest record.")
+                st.caption(
+                    "These values are used by the trained model's lag and rolling-demand features. Existing SKUs are prefilled from their latest record."
+                )
                 a1, a2, a3, a4 = st.columns(4)
                 with a1:
-                    lag_1 = st.number_input("Lag 1", value=float(template.get("lag_1", 0.0)) if template is not None else 0.0)
-                    lag_7 = st.number_input("Lag 7", value=float(template.get("lag_7", 0.0)) if template is not None else 0.0)
+                    lag_1 = st.number_input(
+                        "Lag 1",
+                        value=(
+                            float(template.get("lag_1", 0.0))
+                            if template is not None
+                            else 0.0
+                        ),
+                    )
+                    lag_7 = st.number_input(
+                        "Lag 7",
+                        value=(
+                            float(template.get("lag_7", 0.0))
+                            if template is not None
+                            else 0.0
+                        ),
+                    )
                 with a2:
-                    lag_14 = st.number_input("Lag 14", value=float(template.get("lag_14", 0.0)) if template is not None else 0.0)
-                    lag_28 = st.number_input("Lag 28", value=float(template.get("lag_28", 0.0)) if template is not None else 0.0)
+                    lag_14 = st.number_input(
+                        "Lag 14",
+                        value=(
+                            float(template.get("lag_14", 0.0))
+                            if template is not None
+                            else 0.0
+                        ),
+                    )
+                    lag_28 = st.number_input(
+                        "Lag 28",
+                        value=(
+                            float(template.get("lag_28", 0.0))
+                            if template is not None
+                            else 0.0
+                        ),
+                    )
                 with a3:
-                    rolling_7 = st.number_input("Rolling 7", value=float(template.get("rolling_7", 0.0)) if template is not None else 0.0)
-                    rolling_14 = st.number_input("Rolling 14", value=float(template.get("rolling_14", 0.0)) if template is not None else 0.0)
+                    rolling_7 = st.number_input(
+                        "Rolling 7",
+                        value=(
+                            float(template.get("rolling_7", 0.0))
+                            if template is not None
+                            else 0.0
+                        ),
+                    )
+                    rolling_14 = st.number_input(
+                        "Rolling 14",
+                        value=(
+                            float(template.get("rolling_14", 0.0))
+                            if template is not None
+                            else 0.0
+                        ),
+                    )
                 with a4:
-                    rolling_28 = st.number_input("Rolling 28", value=float(template.get("rolling_28", 0.0)) if template is not None else 0.0)
-                    rolling_7_std = st.number_input("Rolling 7 Std", min_value=0.0, value=float(template.get("rolling_7_std", 0.0)) if template is not None else 0.0)
+                    rolling_28 = st.number_input(
+                        "Rolling 28",
+                        value=(
+                            float(template.get("rolling_28", 0.0))
+                            if template is not None
+                            else 0.0
+                        ),
+                    )
+                    rolling_7_std = st.number_input(
+                        "Rolling 7 Std",
+                        min_value=0.0,
+                        value=(
+                            float(template.get("rolling_7_std", 0.0))
+                            if template is not None
+                            else 0.0
+                        ),
+                    )
 
-            predict_clicked = st.form_submit_button("🚀 Predict with XGBoost", use_container_width=True)
+            predict_clicked = st.form_submit_button(
+                "🚀 Predict with XGBoost", use_container_width=True
+            )
 
         if predict_clicked:
             manual_row = build_manual_input(
-                sku_value, category, subcategory, input_date, launch_date, price, promotion,
-                cost_price, selling_price, current_stock, on_order, lead_time, safety_stock,
-                reorder_point, holiday, promotion_event, lag_1, lag_7, lag_14, lag_28,
-                rolling_7, rolling_14, rolling_28, rolling_7_std
+                sku_value,
+                category,
+                subcategory,
+                input_date,
+                launch_date,
+                price,
+                promotion,
+                cost_price,
+                selling_price,
+                current_stock,
+                on_order,
+                lead_time,
+                safety_stock,
+                reorder_point,
+                holiday,
+                promotion_event,
+                lag_1,
+                lag_7,
+                lag_14,
+                lag_28,
+                rolling_7,
+                rolling_14,
+                rolling_28,
+                rolling_7_std,
             )
             X_manual = prepare_model_input(manual_row)
 
@@ -880,8 +1202,12 @@ with tabs[6]:
             result_cols = st.columns(3)
 
             if "demand" in models:
-                predicted_demand = max(float(models["demand"].predict(X_manual)[0]), 0.0)
-                result_cols[0].metric("Predicted 7-Day Demand", f"{predicted_demand:,.1f} units")
+                predicted_demand = max(
+                    float(models["demand"].predict(X_manual)[0]), 0.0
+                )
+                result_cols[0].metric(
+                    "Predicted 7-Day Demand", f"{predicted_demand:,.1f} units"
+                )
             else:
                 predicted_demand = 0.0
                 result_cols[0].warning("Demand model unavailable")
@@ -889,10 +1215,14 @@ with tabs[6]:
             if "risk" in models:
                 risk_prediction = int(models["risk"].predict(X_manual)[0])
                 if hasattr(models["risk"], "predict_proba"):
-                    risk_probability = float(models["risk"].predict_proba(X_manual)[0, 1] * 100)
+                    risk_probability = float(
+                        models["risk"].predict_proba(X_manual)[0, 1] * 100
+                    )
                 else:
                     risk_probability = risk_prediction * 100.0
-                result_cols[1].metric("Stockout Probability", f"{risk_probability:.1f}%")
+                result_cols[1].metric(
+                    "Stockout Probability", f"{risk_probability:.1f}%"
+                )
                 if risk_prediction == 1:
                     st.error("⚠️ High stockout risk detected for this input.")
                 else:
@@ -904,21 +1234,35 @@ with tabs[6]:
 
             if "reorder" in models:
                 reorder_qty = max(float(models["reorder"].predict(X_manual)[0]), 0.0)
-                result_cols[2].metric("Recommended Reorder Quantity", f"{reorder_qty:,.1f} units")
+                result_cols[2].metric(
+                    "Recommended Reorder Quantity", f"{reorder_qty:,.1f} units"
+                )
             else:
                 reorder_qty = 0.0
                 result_cols[2].warning("Reorder model unavailable")
 
-            result = pd.DataFrame({
-                "Input": [
-                    "SKU", "Category", "Current Stock", "On Order",
-                    "Predicted 7-Day Demand", "Stockout Probability", "Recommended Reorder Quantity"
-                ],
-                "Value": [
-                    sku_value, category, current_stock, on_order,
-                    f"{predicted_demand:,.2f}", f"{risk_probability:.2f}%", f"{reorder_qty:,.2f}"
-                ]
-            })
+            result = pd.DataFrame(
+                {
+                    "Input": [
+                        "SKU",
+                        "Category",
+                        "Current Stock",
+                        "On Order",
+                        "Predicted 7-Day Demand",
+                        "Stockout Probability",
+                        "Recommended Reorder Quantity",
+                    ],
+                    "Value": [
+                        sku_value,
+                        category,
+                        current_stock,
+                        on_order,
+                        f"{predicted_demand:,.2f}",
+                        f"{risk_probability:.2f}%",
+                        f"{reorder_qty:,.2f}",
+                    ],
+                }
+            )
             st.dataframe(result, use_container_width=True, hide_index=True)
 
 
@@ -926,88 +1270,91 @@ with tabs[7]:
     # ============================================================
     # EXECUTIVE SUMMARY
     # ============================================================
-        st.title("Executive Summary Dashboard")
-        st.caption("Management overview of demand, sales and inventory")
+    st.title("Executive Summary Dashboard")
+    st.caption("Management overview of demand, sales and inventory")
 
-        total_revenue = sales["Revenue"].sum()
-        total_units = sales["Units_Sold"].sum()
-        total_inventory_value = prediction_df["Inventory_Value"].fillna(0).sum()
+    total_revenue = sales["Revenue"].sum()
+    total_units = sales["Units_Sold"].sum()
+    total_inventory_value = prediction_df["Inventory_Value"].fillna(0).sum()
 
-        if "Predicted_Stockout_Risk" in prediction_df:
-            risk_count = int(prediction_df["Predicted_Stockout_Risk"].sum())
-        else:
-            risk_count = 0
+    if "Predicted_Stockout_Risk" in prediction_df:
+        risk_count = int(prediction_df["Predicted_Stockout_Risk"].sum())
+    else:
+        risk_count = 0
 
-        if "Predicted_Reorder_Qty" in prediction_df:
-            reorder_total = prediction_df["Predicted_Reorder_Qty"].sum()
-        else:
-            reorder_total = 0
+    if "Predicted_Reorder_Qty" in prediction_df:
+        reorder_total = prediction_df["Predicted_Reorder_Qty"].sum()
+    else:
+        reorder_total = 0
 
-        a, b, c, d, e = st.columns(5)
-        a.metric("Revenue", f"₹{total_revenue:,.0f}")
-        b.metric("Units Sold", f"{total_units:,.0f}")
-        c.metric("Inventory Value", f"₹{total_inventory_value:,.0f}")
-        d.metric("High-Risk SKUs", f"{risk_count:,}")
-        e.metric("Predicted Reorder", f"{reorder_total:,.0f}")
+    a, b, c, d, e = st.columns(5)
+    a.metric("Revenue", f"₹{total_revenue:,.0f}")
+    b.metric("Units Sold", f"{total_units:,.0f}")
+    c.metric("Inventory Value", f"₹{total_inventory_value:,.0f}")
+    d.metric("High-Risk SKUs", f"{risk_count:,}")
+    e.metric("Predicted Reorder", f"{reorder_total:,.0f}")
 
-        st.markdown("### Business Overview")
+    st.markdown("### Business Overview")
 
-        left, right = st.columns(2)
+    left, right = st.columns(2)
 
-        with left:
-            monthly = (
-                sales.assign(Month=sales["Date"].dt.to_period("M").astype(str))
-                .groupby("Month", as_index=False)
-                .agg(Revenue=("Revenue", "sum"), Units=("Units_Sold", "sum"))
-            )
-
-            fig = px.line(
-                monthly, x="Month", y="Revenue", markers=True, title="Monthly Revenue Trend"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        with right:
-            category = (
-                sku_master.groupby("Category", as_index=False)
-                .agg(Products=("SKU", "nunique"), Avg_Price=("Selling_Price", "mean"))
-                .sort_values("Products", ascending=False)
-            )
-
-            fig = px.bar(category, x="Category", y="Products", title="Products by Category")
-            st.plotly_chart(fig, use_container_width=True)
-
-        st.markdown("### Model Performance from Training Notebook")
-
-        performance = pd.DataFrame(
-            {
-                "Model": [
-                    "XGBoost Demand Forecast",
-                    "XGBoost Stockout Risk",
-                    "XGBoost Reorder Quantity",
-                ],
-                "Primary Metric": [
-                    "R² = 94.36%",
-                    "Accuracy = 99.03%",
-                    "R² = 78.84%",
-                ],
-                "MAE": [
-                    "8.082",
-                    "—",
-                    "2.824",
-                ],
-                "RMSE": [
-                    "10.452",
-                    "—",
-                    "7.802",
-                ],
-            }
+    with left:
+        monthly = (
+            sales.assign(Month=sales["Date"].dt.to_period("M").astype(str))
+            .groupby("Month", as_index=False)
+            .agg(Revenue=("Revenue", "sum"), Units=("Units_Sold", "sum"))
         )
 
-        st.dataframe(performance, use_container_width=True, hide_index=True)
+        fig = px.line(
+            monthly, x="Month", y="Revenue", markers=True, title="Monthly Revenue Trend"
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
-        st.info(
-            "These model-performance values are the test-set results recorded "
-            "in the supplied AI_Forecast notebook."
+    with right:
+        category = (
+            sku_master.groupby("Category", as_index=False)
+            .agg(Products=("SKU", "nunique"), Avg_Price=("Selling_Price", "mean"))
+            .sort_values("Products", ascending=False)
         )
 
-st.markdown('<div class="foresight-footer">Project Foresight · AI Demand & Inventory Intelligence · XGBoost Powered</div>', unsafe_allow_html=True)
+        fig = px.bar(category, x="Category", y="Products", title="Products by Category")
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("### Model Performance from Training Notebook")
+
+    performance = pd.DataFrame(
+        {
+            "Model": [
+                "XGBoost Demand Forecast",
+                "XGBoost Stockout Risk",
+                "XGBoost Reorder Quantity",
+            ],
+            "Primary Metric": [
+                "R² = 94.36%",
+                "Accuracy = 99.03%",
+                "R² = 78.84%",
+            ],
+            "MAE": [
+                "8.082",
+                "—",
+                "2.824",
+            ],
+            "RMSE": [
+                "10.452",
+                "—",
+                "7.802",
+            ],
+        }
+    )
+
+    st.dataframe(performance, use_container_width=True, hide_index=True)
+
+    st.info(
+        "These model-performance values are the test-set results recorded "
+        "in the supplied AI_Forecast notebook."
+    )
+
+st.markdown(
+    '<div class="foresight-footer">Project Foresight · AI Demand & Inventory Intelligence · XGBoost Powered</div>',
+    unsafe_allow_html=True,
+)
