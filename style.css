@@ -1,0 +1,616 @@
+/* =========================================================
+   PROJECT FORESIGHT — COMPACT PROFESSIONAL THEME
+   ========================================================= */
+
+.stApp {
+    background:
+        radial-gradient(circle at 8% 0%, rgba(37,99,235,.12), transparent 28%),
+        radial-gradient(circle at 96% 12%, rgba(124,58,237,.09), transparent 25%),
+        linear-gradient(135deg, #f4f7fb 0%, #edf3fa 50%, #f8fafc 100%);
+    color: #172554;
+}
+
+/* MAIN CONTAINER */
+.block-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-top: 1rem;
+    padding-bottom: 1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.foresight-header {
+    position: relative;
+    overflow: hidden;
+    padding: 25px 32px;
+    margin-bottom: 14px;
+    border-radius: 18px;
+    color: white;
+    background:
+        radial-gradient(circle at 90% 15%, rgba(96,165,250,.45), transparent 25%),
+        radial-gradient(circle at 65% 110%, rgba(124,58,237,.28), transparent 32%),
+        linear-gradient(135deg, #0f1f45 0%, #173b80 48%, #2563eb 100%);
+    box-shadow: 0 12px 30px rgba(15,31,69,.18);
+}
+
+.foresight-header::before {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    right: -60px;
+    top: -80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.07);
+}
+
+.foresight-header::after {
+    content: "";
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    right: 170px;
+    bottom: -85px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+}
+
+.foresight-brand {
+    position: relative;
+    z-index: 2;
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -.7px;
+    margin-bottom: 4px;
+}
+
+.foresight-subtitle {
+    position: relative;
+    z-index: 2;
+    font-size: 1.08rem;
+    color: #dbeafe;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.status-pill {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: #eff6ff;
+    background: rgba(255,255,255,.11);
+    border: 1px solid rgba(255,255,255,.25);
+    font-size: .88rem;
+    font-weight: 650;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 10px rgba(52,211,153,.85);
+}
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+div[data-baseweb="tab-list"] {
+    gap: 5px;
+    padding: 5px;
+    margin-bottom: 12px;
+    border-radius: 13px;
+    background: rgba(255,255,255,.94);
+    border: 1px solid #dbe4ef;
+    box-shadow: 0 6px 18px rgba(15,23,42,.06);
+}
+
+button[data-baseweb="tab"] {
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 9px;
+    color: #52627a;
+    font-size: 1rem !important;
+    font-weight: 700;
+}
+
+button[data-baseweb="tab"]:hover {
+    color: #1d4ed8;
+    background: #eff6ff;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: white !important;
+    background: linear-gradient(135deg,#2563eb,#1d4ed8) !important;
+    box-shadow: 0 5px 12px rgba(37,99,235,.25);
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1 {
+    color: #102a56 !important;
+    font-size: 2.35rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -.5px;
+    line-height: 1.15;
+    margin-top: .3rem !important;
+    margin-bottom: .45rem !important;
+}
+
+h2 {
+    color: #132f5f !important;
+    font-size: 1.85rem !important;
+    font-weight: 750 !important;
+    line-height: 1.2;
+    margin-top: .35rem !important;
+    margin-bottom: .4rem !important;
+}
+
+h3 {
+    color: #193b70 !important;
+    font-size: 1.35rem !important;
+    font-weight: 720 !important;
+    line-height: 1.25;
+    margin-top: .3rem !important;
+    margin-bottom: .3rem !important;
+}
+
+/* =========================================================
+   NORMAL TEXT
+   ========================================================= */
+
+p,
+.stMarkdown {
+    font-size: 1.05rem !important;
+    line-height: 1.45;
+    margin-bottom: .4rem;
+}
+
+.stCaption {
+    color: #64748b !important;
+    font-size: .95rem !important;
+    line-height: 1.35;
+}
+
+/* =========================================================
+   METRIC CARDS
+   ========================================================= */
+
+div[data-testid="stMetric"] {
+    position: relative;
+    overflow: hidden;
+    padding: 15px 18px;
+    min-height: 105px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.97);
+    border: 1px solid #dbe5f0;
+    box-shadow: 0 6px 18px rgba(30,64,175,.07);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+div[data-testid="stMetric"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg,#2563eb,#7c3aed);
+}
+
+div[data-testid="stMetric"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(30,64,175,.12);
+}
+
+div[data-testid="stMetricLabel"] {
+    color: #64748b !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+}
+
+div[data-testid="stMetricValue"] {
+    color: #102a56 !important;
+    font-size: 2rem !important;
+    font-weight: 800 !important;
+    line-height: 1.1;
+}
+
+div[data-testid="stMetricDelta"] {
+    font-size: .9rem !important;
+}
+
+/* =========================================================
+   CUSTOM CARDS
+   ========================================================= */
+
+.foresight-card {
+    padding: 16px 18px;
+    min-height: 110px;
+    margin-bottom: 10px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.95);
+    border: 1px solid #dce5f0;
+    box-shadow: 0 5px 16px rgba(15,23,42,.06);
+}
+
+.foresight-card:hover {
+    transform: translateY(-2px);
+    border-color: #bfdbfe;
+    box-shadow: 0 10px 24px rgba(37,99,235,.11);
+}
+
+/* =========================================================
+   ALERTS
+   ========================================================= */
+
+div[data-testid="stAlert"] {
+    border-radius: 10px !important;
+    border: 1px solid #cbdcf2 !important;
+    box-shadow: 0 4px 12px rgba(15,23,42,.04);
+    font-size: 1rem !important;
+    padding: 10px 14px !important;
+}
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+div[data-baseweb="input"],
+div[data-baseweb="textarea"],
+div[data-baseweb="select"] > div {
+    min-height: 40px;
+    border-radius: 9px !important;
+    border-color: #cbd5e1 !important;
+    background: white !important;
+}
+
+div[data-baseweb="input"]:focus-within,
+div[data-baseweb="textarea"]:focus-within {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37,99,235,.12) !important;
+}
+
+input,
+textarea {
+    font-size: 1rem !important;
+}
+
+div[data-baseweb="select"] {
+    font-size: 1rem !important;
+}
+
+/* =========================================================
+   INPUT LABELS
+   ========================================================= */
+
+.stSelectbox label,
+.stMultiSelect label,
+.stDateInput label,
+.stNumberInput label,
+.stTextInput label,
+.stTextArea label {
+    color: #334155 !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 2px;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.stButton > button {
+    min-height: 44px;
+    padding: 0 19px;
+    border: 0;
+    border-radius: 9px;
+    color: white;
+    background: linear-gradient(135deg,#2563eb,#1d4ed8);
+    font-size: 1rem !important;
+    font-weight: 750;
+    box-shadow: 0 5px 13px rgba(37,99,235,.20);
+    transition: all .2s ease;
+}
+
+.stButton > button:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(135deg,#1d4ed8,#1e40af);
+    box-shadow: 0 8px 18px rgba(37,99,235,.26);
+}
+
+/* =========================================================
+   DATAFRAME
+   ========================================================= */
+
+div[data-testid="stDataFrame"] {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #dbe5f0;
+    box-shadow: 0 5px 16px rgba(15,23,42,.05);
+    background: white;
+}
+
+/* =========================================================
+   DATA EDITOR
+   ========================================================= */
+
+div[data-testid="stDataEditor"] {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #dbe5f0;
+    box-shadow: 0 5px 16px rgba(15,23,42,.05);
+}
+
+/* =========================================================
+   FILE UPLOADER
+   ========================================================= */
+
+section[data-testid="stFileUploaderDropzone"] {
+    border-radius: 11px;
+    border: 2px dashed #bfdbfe;
+    background: rgba(239,246,255,.65);
+    padding: 12px;
+}
+
+section[data-testid="stFileUploaderDropzone"] p {
+    font-size: 1rem !important;
+    font-weight: 600;
+}
+
+/* =========================================================
+   CHECKBOX / RADIO / SLIDER
+   ========================================================= */
+
+.stCheckbox label,
+.stRadio label,
+.stSlider label {
+    font-size: 1rem !important;
+    font-weight: 650 !important;
+}
+
+/* =========================================================
+   EXPANDER
+   ========================================================= */
+
+div[data-testid="stExpander"] {
+    border-radius: 11px;
+    border: 1px solid #dbe5f0;
+    background: rgba(255,255,255,.8);
+    box-shadow: 0 4px 12px rgba(15,23,42,.04);
+}
+
+div[data-testid="stExpander"] summary {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+}
+
+/* =========================================================
+   DROPDOWN OPTIONS
+   ========================================================= */
+
+div[role="option"] {
+    font-size: 1rem !important;
+}
+
+/* =========================================================
+   DIVIDERS
+   ========================================================= */
+
+hr {
+    border: 0 !important;
+    height: 1px !important;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #cbd5e1,
+        transparent
+    ) !important;
+    margin: 14px 0 !important;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.foresight-footer {
+    margin-top: 18px;
+    padding: 12px;
+    text-align: center;
+    color: #64748b;
+    font-size: .9rem;
+    border-top: 1px solid #dbe3ed;
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #e8eef6;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+    .foresight-brand {
+        font-size: 2.2rem;
+    }
+
+    .foresight-subtitle {
+        font-size: 1rem;
+    }
+
+    button[data-baseweb="tab"] {
+        font-size: .92rem !important;
+        padding: 0 10px;
+    }
+
+    h1 {
+        font-size: 2.1rem !important;
+    }
+
+    h2 {
+        font-size: 1.7rem !important;
+    }
+
+    h3 {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .block-container {
+        padding-left: .8rem;
+        padding-right: .8rem;
+        padding-top: .7rem;
+    }
+
+    .foresight-header {
+        padding: 22px 20px;
+        border-radius: 15px;
+        margin-bottom: 10px;
+    }
+
+    .foresight-brand {
+        font-size: 1.8rem;
+    }
+
+    .foresight-subtitle {
+        font-size: .92rem;
+        margin-bottom: 8px;
+    }
+
+    .status-pill {
+        font-size: .82rem;
+        padding: 5px 10px;
+    }
+
+    div[data-baseweb="tab-list"] {
+        overflow-x: auto;
+    }
+
+    button[data-baseweb="tab"] {
+        font-size: .82rem !important;
+        padding: 0 8px;
+        min-height: 42px;
+    }
+
+    h1 {
+        font-size: 1.8rem !important;
+    }
+
+    h2 {
+        font-size: 1.5rem !important;
+    }
+
+    h3 {
+        font-size: 1.2rem !important;
+    }
+
+    p,
+    .stMarkdown {
+        font-size: 1rem !important;
+    }
+
+    div[data-testid="stMetric"] {
+        padding: 13px 15px;
+        min-height: 95px;
+    }
+
+    div[data-testid="stMetricValue"] {
+        font-size: 1.7rem !important;
+    }
+
+    div[data-testid="stMetricLabel"] {
+        font-size: .9rem !important;
+    }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .foresight-header {
+        padding: 19px 16px;
+    }
+
+    .foresight-brand {
+        font-size: 1.55rem;
+    }
+
+    .foresight-subtitle {
+        font-size: .85rem;
+    }
+
+    h1 {
+        font-size: 1.6rem !important;
+    }
+
+    h2 {
+        font-size: 1.35rem !important;
+    }
+
+    h3 {
+        font-size: 1.1rem !important;
+    }
+
+    p,
+    .stMarkdown {
+        font-size: .95rem !important;
+    }
+
+    div[data-testid="stMetric"] {
+        padding: 11px 13px;
+        min-height: 90px;
+    }
+
+    div[data-testid="stMetricValue"] {
+        font-size: 1.5rem !important;
+    }
+
+    div[data-testid="stMetricLabel"] {
+        font-size: .85rem !important;
+    }
+
+    .stButton > button {
+        min-height: 42px;
+        font-size: .95rem !important;
+    }
+}
